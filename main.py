@@ -3,6 +3,7 @@ from flask import Flask
 from flask import jsonify, request 
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from werkzeug.security import generate_password_hash, check_password_hash
 
 MONGO_URI = os.getenv('MONGO_URI')
 
@@ -18,3 +19,40 @@ def find_user():
     return jsonify([str(doc) for doc in cursor]) 
   except Exception as e:
     return {"error": str(e)}, 500
+
+# Регистрация
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    login = data.get('login')
+    password = data.get('password')
+
+    if not login or not password:
+        return jsonify({"error": "Логин и пароль обязательны"}), 400
+
+    if mongo.db.drivers.find_one({"login": login}):
+        return jsonify({"error": "Пользователь уже существует"}), 409
+
+    hashed_password = generate_password_hash(password)
+    mongo.db.drivers.insert_one({"login": login, "password": hashed_password})
+
+    return jsonify({"message": "Регистрация успешна"}), 201
+
+# Логин
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    login = data.get('login')
+    password = data.get('password')
+
+    if not login or not password:
+        return jsonify({"error": "Логин и пароль обязательны"}), 400
+
+    user = mongo.db.drivers.find_one({"login": login})
+    if not user:
+        return jsonify({"error": "Пользователь не найден"}), 404
+
+    if not check_password_hash(user["password"], password):
+        return jsonify({"error": "Неверный пароль"}), 401
+
+    return jsonify({"message": "Вход выполнен успешно"}), 200
