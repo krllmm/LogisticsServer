@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from flask import jsonify, request 
+from flask import jsonify, request
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,13 +12,14 @@ CORS(app)
 app.config["MONGO_URI"] = MONGO_URI
 mongo = PyMongo(app)
 
+
 @app.route("/", methods=['GET'])
 def find_user():
-  try:
-    cursor = mongo.db.drivers.find()
-    return jsonify([str(doc) for doc in cursor]) 
-  except Exception as e:
-    return {"error": str(e)}, 500
+    try:
+        cursor = mongo.db.drivers.find()
+        return jsonify([str(doc) for doc in cursor])
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 # Регистрация
 @app.route('/register', methods=['POST'])
@@ -56,3 +57,39 @@ def login():
         return jsonify({"error": "Неверный пароль"}), 401
 
     return jsonify({"message": "Вход выполнен успешно"}), 200
+
+
+@app.route('/seeddb', methods=['GET'])
+def seeddb():
+    try:
+        mongo.db.drivers.insert_one(
+            {
+                "login": "admin",
+                "password": generate_password_hash("admin"),
+                "first_name": "Андрей",
+                "second_name": "Фамилия",
+                "experince": 2,
+                "age": 34,
+                "category": "B",
+                "delivery":
+                    [
+                        {
+                            "id": 1,
+                            "from": "Барановичи",
+                            "to": "Минск",
+                            "product_id": 123,
+                            "amount": 12,
+                        },
+                        {
+                            "id": 2,
+                            "from": "Барановичи",
+                            "to": "Брест",
+                            "product_id": 98,
+                            "amount": 6,
+                        },
+                ],
+            }
+        )
+        return jsonify({"message": "Drivers created"}), 201
+    except Exception as e:
+        return {"error": str(e)}, 500
