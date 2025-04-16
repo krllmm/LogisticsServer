@@ -115,3 +115,37 @@ def seeddb():
         return jsonify({"message": "Drivers created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
+
+@app.route('/seeddb_products', methods=['GET'])
+def seeddb_products():
+    try:
+        mongo.db.products.insert_one(
+            {
+              "name": "Машина для перемешивания фарша МПФ-30.В1",
+              "quantity": 100,
+              "description": "Промышленная машина для перемешивания фарша.",
+              "weight": 20,
+              "dimentions": "50, 50, 80",
+              "storage_id": 1,
+            }
+        )
+        return jsonify({"message": "Products created"}), 201
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route('/seeddb_logists', methods=['GET'])
+def seeddb_logists():
+    try:
+        mongo.db.logists.insert_one(
+            {
+              "name": "Agent",
+              "super_rights": "true",
+              "storage_id": 1,
+              "drivers": [
+                1, 2
+              ]
+            }
+        )
+        return jsonify({"message": "Logists created"}), 201
+    except Exception as e:
+        return {"error": str(e)}, 500
