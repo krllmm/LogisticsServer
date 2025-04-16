@@ -13,13 +13,19 @@ app.config["MONGO_URI"] = MONGO_URI
 mongo = PyMongo(app)
 
 
-@app.route("/", methods=['GET'])
-def find_user():
-    try:
-        cursor = mongo.db.drivers.find()
-        return jsonify([str(doc) for doc in cursor])
-    except Exception as e:
-        return {"error": str(e)}, 500
+@app.route("/driver", methods=['GET'])
+def driver():
+  login = request.args.get("login")
+
+  if not login:
+      return jsonify({"error": "Login is required"}), 400
+
+  user = mongo.db.drivers.find_one({"login": login})
+
+  if user:
+      return jsonify(user)
+  else:
+      return jsonify({"error": "User not found"}), 404
 
 # Регистрация
 @app.route('/register', methods=['POST'])
@@ -45,6 +51,8 @@ def login():
     data = request.get_json()
     login = data.get('login')
     password = data.get('password')
+    
+    print(login, password)
 
     if not login or not password:
         return jsonify({"error": "Логин и пароль обязательны"}), 400
@@ -57,6 +65,20 @@ def login():
         return jsonify({"error": "Неверный пароль"}), 401
 
     return jsonify({"message": "Вход выполнен успешно"}), 200
+  
+@app.route('/getDeliveries', methods=['GET'])
+def getDeliveries():
+  login = request.args.get("login")
+
+  if not login:
+      return jsonify({"error": "Login is required"}), 400
+
+  user = mongo.db.drivers.find_one({"login": login}, {"_id": 0, "delivery": 1})
+
+  if user and "delivery" in user:
+      return jsonify(user["delivery"])
+  else:
+      return jsonify({"error": "User not found or no delivery data"}), 404
 
 
 @app.route('/seeddb', methods=['GET'])
