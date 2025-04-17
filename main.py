@@ -79,6 +79,27 @@ def getDeliveries():
       return jsonify(user["delivery"])
   else:
       return jsonify({"error": "User not found or no delivery data"}), 404
+    
+@app.route('/getProduct', methods=['GET'])
+def getProduct():
+  id = request.args.get("id")
+  
+  print(id)
+
+  if not id:
+      return jsonify({"error": "Product id is required"}), 400
+
+  product = mongo.db.products.find_one({"custom_id": int(id)})
+  
+  print(product)
+
+  if product:
+      return jsonify(product)
+  else:
+      return jsonify({"error": "Product not found"}), 404
+
+
+
 
 
 @app.route('/seeddb', methods=['GET'])
@@ -98,15 +119,19 @@ def seeddb():
                         {
                             "id": 1,
                             "from": "Барановичи",
+                            "from_address": "ул. Чернышевского 61",
                             "to": "Минск",
-                            "product_id": 123,
+                            "to_address": "ул. Азгура 3",
+                            "product_id": 1,
                             "amount": 12,
                         },
                         {
                             "id": 2,
                             "from": "Барановичи",
+                            "from_address": "ул. Чернышевского 61",
                             "to": "Брест",
-                            "product_id": 98,
+                            "to_address": "ул. Кижеватова 76", 
+                            "product_id": 2,
                             "amount": 6,
                         },
                 ],
@@ -121,11 +146,23 @@ def seeddb_products():
     try:
         mongo.db.products.insert_one(
             {
+              "custom_id": 1,
               "name": "Машина для перемешивания фарша МПФ-30.В1",
               "quantity": 100,
               "description": "Промышленная машина для перемешивания фарша.",
               "weight": 20,
               "dimentions": "50, 50, 80",
+              "storage_id": 1,
+            }
+        )
+        mongo.db.products.insert_one(
+            {
+              "custom_id": 2,
+              "name": "Машина тестораскаточная ТРМ-500",
+              "quantity": 80,
+              "description": "Промышленная машина для раскатывания теста.",
+              "weight": 13,
+              "dimentions": "60, 40, 60",
               "storage_id": 1,
             }
         )
