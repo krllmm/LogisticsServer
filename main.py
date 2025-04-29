@@ -186,3 +186,24 @@ def seeddb_logists():
         return jsonify({"message": "Logists created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
+    
+    
+@app.route('/loginLogist', methods=[""])
+def loginLogist():
+    data = request.get_json()
+    login = data.get('login')
+    password = data.get('password')
+    
+    print(login, password)
+
+    if not login or not password:
+        return jsonify({"error": "Логин и пароль обязательны"}), 400
+
+    user = mongo.db.logists.find_one({"login": login})
+    if not user:
+        return jsonify({"error": "Пользователь не найден"}), 404
+
+    if not check_password_hash(user["password"], password):
+        return jsonify({"error": "Неверный пароль"}), 401
+
+    return jsonify({"message": "Вход выполнен успешно"}), 200
