@@ -15,17 +15,17 @@ mongo = PyMongo(app)
 
 @app.route("/driver", methods=['GET'])
 def driver():
-  login = request.args.get("login")
+    login = request.args.get("login")
 
-  if not login:
-      return jsonify({"error": "Login is required"}), 400
+    if not login:
+        return jsonify({"error": "Login is required"}), 400
 
-  user = mongo.db.drivers.find_one({"login": login})
+    user = mongo.db.drivers.find_one({"login": login})
 
-  if user:
-      return jsonify(user)
-  else:
-      return jsonify({"error": "User not found"}), 404
+    if user:
+        return jsonify(user)
+    else:
+        return jsonify({"error": "User not found"}), 404
 
 # Регистрация
 @app.route('/register', methods=['POST'])
@@ -51,7 +51,7 @@ def login():
     data = request.get_json()
     login = data.get('login')
     password = data.get('password')
-    
+
     print(login, password)
 
     if not login or not password:
@@ -65,41 +65,40 @@ def login():
         return jsonify({"error": "Неверный пароль"}), 401
 
     return jsonify({"message": "Вход выполнен успешно"}), 200
-  
+
 @app.route('/getDeliveries', methods=['GET'])
 def getDeliveries():
-  login = request.args.get("login")
+    login = request.args.get("login")
 
-  if not login:
-      return jsonify({"error": "Login is required"}), 400
+    if not login:
+        return jsonify({"error": "Login is required"}), 400
 
-  user = mongo.db.drivers.find_one({"login": login}, {"_id": 0, "delivery": 1})
+    user = mongo.db.drivers.find_one(
+        {"login": login}, {"_id": 0, "delivery": 1})
 
-  if user and "delivery" in user:
-      return jsonify(user["delivery"])
-  else:
-      return jsonify({"error": "User not found or no delivery data"}), 404
-    
+    if user and "delivery" in user:
+        return jsonify(user["delivery"])
+    else:
+        return jsonify({"error": "User not found or no delivery data"}), 404
+
+
 @app.route('/getProduct', methods=['GET'])
 def getProduct():
-  id = request.args.get("id")
-  
-  print(id)
+    id = request.args.get("id")
 
-  if not id:
-      return jsonify({"error": "Product id is required"}), 400
+    print(id)
 
-  product = mongo.db.products.find_one({"custom_id": int(id)})
-  
-  print(product)
+    if not id:
+        return jsonify({"error": "Product id is required"}), 400
 
-  if product:
-      return jsonify(product)
-  else:
-      return jsonify({"error": "Product not found"}), 404
+    product = mongo.db.products.find_one({"custom_id": int(id)})
 
+    print(product)
 
-
+    if product:
+        return jsonify(product)
+    else:
+        return jsonify({"error": "Product not found"}), 404
 
 
 @app.route('/seeddb', methods=['GET'])
@@ -130,7 +129,7 @@ def seeddb():
                             "from": "Барановичи",
                             "from_address": "ул. Чернышевского 61",
                             "to": "Брест",
-                            "to_address": "ул. Кижеватова 76", 
+                            "to_address": "ул. Кижеватова 76",
                             "product_id": 2,
                             "amount": 6,
                         },
@@ -141,59 +140,73 @@ def seeddb():
     except Exception as e:
         return {"error": str(e)}, 500
 
+
 @app.route('/seeddb_products', methods=['GET'])
 def seeddb_products():
     try:
         mongo.db.products.insert_one(
             {
-              "custom_id": 1,
-              "name": "Машина для перемешивания фарша МПФ-30.В1",
-              "quantity": 100,
-              "description": "Промышленная машина для перемешивания фарша.",
-              "weight": 20,
-              "dimentions": "50, 50, 80",
-              "storage_id": 1,
+                "custom_id": 1,
+                "name": "Машина для перемешивания фарша МПФ-30.В1",
+                "quantity": 100,
+                "description": "Промышленная машина для перемешивания фарша.",
+                "weight": 20,
+                "dimentions": "50, 50, 80",
+                "storage_id": 1,
             }
         )
         mongo.db.products.insert_one(
             {
-              "custom_id": 2,
-              "name": "Машина тестораскаточная ТРМ-500",
-              "quantity": 80,
-              "description": "Промышленная машина для раскатывания теста.",
-              "weight": 13,
-              "dimentions": "60, 40, 60",
-              "storage_id": 1,
+                "custom_id": 2,
+                "name": "Машина тестораскаточная ТРМ-500",
+                "quantity": 80,
+                "description": "Промышленная машина для раскатывания теста.",
+                "weight": 13,
+                "dimentions": "60, 40, 60",
+                "storage_id": 1,
             }
         )
         return jsonify({"message": "Products created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
 
+
 @app.route('/seeddb_logists', methods=['GET'])
 def seeddb_logists():
     try:
         mongo.db.logists.insert_one(
             {
-              "name": "Agent",
-              "super_rights": "true",
-              "storage_id": 1,
-              "drivers": [
-                1, 2
-              ]
+                "login": "Agent",
+                "password": generate_password_hash("password"),
+                "super_rights": "true",
+                "storage_id": 1,
+                "drivers": [
+                    1, 2
+                ]
+            }
+        )
+        mongo.db.logists.insert_one(
+            {
+                "login": "Agent_2",
+                "password": generate_password_hash("password_2"),
+                "super_rights": "false",
+                "storage_id": 1,
+                "drivers": [
+                    3, 4
+                ]
             }
         )
         return jsonify({"message": "Logists created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
-    
-    
-@app.route('/loginLogist', methods=[""])
+
+
+@app.route('/loginLogist', methods=["POST"])
 def loginLogist():
     data = request.get_json()
     login = data.get('login')
     password = data.get('password')
-    
+
     print(login, password)
 
     if not login or not password:
@@ -207,3 +220,13 @@ def loginLogist():
         return jsonify({"error": "Неверный пароль"}), 401
 
     return jsonify({"message": "Вход выполнен успешно"}), 200
+
+
+@app.route('/getAllDrivers', methods=["GET"])
+def getAllDrivers():
+    drivers = mongo.db.drivers.find()
+
+    if drivers:
+        return jsonify(drivers)
+    else:
+        return jsonify({"error": "Error happend on server"}), 404
