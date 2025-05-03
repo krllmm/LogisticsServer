@@ -28,6 +28,8 @@ def driver():
         return jsonify({"error": "User not found"}), 404
 
 # Регистрация
+
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -46,6 +48,8 @@ def register():
     return jsonify({"message": "Регистрация успешна"}), 201
 
 # Логин
+
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -65,6 +69,7 @@ def login():
         return jsonify({"error": "Неверный пароль"}), 401
 
     return jsonify({"message": "Вход выполнен успешно"}), 200
+
 
 @app.route('/getDeliveries', methods=['GET'])
 def getDeliveries():
@@ -230,3 +235,42 @@ def getAllDrivers():
         return jsonify(drivers)
     else:
         return jsonify({"error": "Error happend on server"}), 404
+
+
+@app.route('/addDriver', methods=["POST"])
+def addDriver():
+    try:
+        data = request.get_json()
+        name = data.get('firstName')
+        second_name = data.get('secondName')
+        sex = data.get("sex")
+        experience = data.get("experience")
+        age = data.get("age")
+        category = data.get("category")
+        login = data.get('login')
+        password = data.get('password')
+
+        print(name)
+        print(second_name)
+        print(sex)
+        print(experience)
+        print(age)
+        print(category)
+        print(login)
+        print(password)
+
+        mongo.db.drivers.insert_one(
+            {
+                "login": login,
+                "password": generate_password_hash(password),
+                "first_name": name,
+                "second_name": second_name,
+                "experince": experience,
+                "sex": sex,
+                "age": age,
+                "category": category,
+                "delivery": [],
+            })
+        return jsonify({"message": "Driver is created"}), 201
+    except Exception as e:
+        return {"error": str(e)}, 500
