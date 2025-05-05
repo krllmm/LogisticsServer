@@ -4,6 +4,7 @@ from flask import Flask
 from flask import jsonify, request
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 
 MONGO_URI = os.getenv('MONGO_URI')
@@ -289,6 +290,7 @@ def addDelivery():
         amount = data.get("amount")
         iso_str = data.get("datetime")
         date = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        id = data.get("id")
 
         print(fromCity)
         print(fromAddress)
@@ -297,19 +299,37 @@ def addDelivery():
         print(product_id)
         print(amount)
         print(date)
+        print(id)
+        
+        if not id:
+            return jsonify({"error": "id обязателен"}), 400
 
-        # mongo.db.drivers.insert_one(
-        #     {
-        #         "login": login,
-        #         "password": generate_password_hash(password),
-        #         "first_name": name,
-        #         "second_name": second_name,
-        #         "experince": experience,
-        #         "sex": sex,
-        #         "age": age,
-        #         "category": category,
-        #         "delivery": [],
-        #     })
-        return jsonify({"message": "Delivery is created"}), 201
+        result = mongo.db.drivers.update_one(
+            {"_id": ObjectId(id)},
+            {"$addToSet": {"delivery": {
+                "from": fromCity,
+                "from_address": fromAddress,
+                "to": toCity,
+                "to_address": toAddress,
+                "product_id": product_id,
+                "amount": amount,
+                "date": date,
+            }}} 
+        )
+        if result.modified_count == 1:
+            return jsonify({"message": "Перевозка добавлена"}), 200
+        else:
+            return jsonify({"message": "Пользователь не найден или не обновлён"}), 404
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route("/getAvailableDrivers", methods=["GET"])
+def getAvailableDrivers():
+    try:        
+        result = mongo.db.drivers.find({}, {"_id": 1, "first_name": 1, "second_name": 1})
+
+        items = [{"_id": str(doc["_id"]), "first_name": doc.get("first_name", ""), "second_name": doc.get("second_name", "")} for doc in result]
+
+        return jsonify(items)
     except Exception as e:
         return {"error": str(e)}, 500
