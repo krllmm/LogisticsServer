@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from flask import Flask
 from flask import jsonify, request
@@ -272,5 +273,43 @@ def addDriver():
                 "delivery": [],
             })
         return jsonify({"message": "Driver is created"}), 201
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route('/addDelivery', methods=["POST"])
+def addDelivery():
+    try:
+        data = request.get_json()
+        fromCity = data.get('from')
+        fromAddress = data.get('from_address')
+        toCity = data.get('to')
+        toAddress = data.get('to_address')
+        
+        product_id = data.get("product_id")
+        amount = data.get("amount")
+        iso_str = data.get("datetime")
+        date = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+
+        print(fromCity)
+        print(fromAddress)
+        print(toCity)
+        print(toAddress)
+        print(product_id)
+        print(amount)
+        print(date)
+
+        # mongo.db.drivers.insert_one(
+        #     {
+        #         "login": login,
+        #         "password": generate_password_hash(password),
+        #         "first_name": name,
+        #         "second_name": second_name,
+        #         "experince": experience,
+        #         "sex": sex,
+        #         "age": age,
+        #         "category": category,
+        #         "delivery": [],
+        #     })
+        return jsonify({"message": "Delivery is created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
