@@ -350,3 +350,44 @@ def getAvailableDrivers():
         return jsonify(items)
     except Exception as e:
         return {"error": str(e)}, 500
+    
+    
+@app.route("/closeDelivery", methods=["POST"])
+def closeDelivery(): 
+    data = request.get_json()
+    deliveryId = data.get('deliveryId')
+    driverLogin = data.get('driverLogin')
+    
+    print(deliveryId, driverLogin)
+    try:
+        user = mongo.db.drivers.find_one({'login': driverLogin})
+        if not user:
+            return 'User not found'
+
+        # Найти нужный объект из массива
+        item_to_move = next((item for item in user.get('delivery', []) if str(item.get('id')) == deliveryId), None)
+
+        if not item_to_move:
+            return 'Item not found in user'
+
+        # Добавить в другую коллекцию
+        mongo.db.delivery_history.insert_one(item_to_move)
+
+        # Удалить из массива
+        mongo.db.drivers.update_one(
+            {'login': driverLogin},
+            {'$pull': {'delivery': {'id': deliveryId}}}
+        )
+
+        return 'Item moved successfully'
+    except Exception as e:
+        return {"error": str(e)}, 500
+    
+@app.route("/getDeliveryHistory", methods=["GET"])
+def getDeliveryHistory():
+    history = mongo.db.delivery_history.find()
+
+    if history:
+        return jsonify(history)
+    else:
+        return jsonify({"error": "Error happend on server"}), 404
