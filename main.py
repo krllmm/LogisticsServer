@@ -5,6 +5,8 @@ from flask import jsonify, request
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+import random
+import string
 from werkzeug.security import generate_password_hash, check_password_hash
 
 MONGO_URI = os.getenv('MONGO_URI')
@@ -80,8 +82,20 @@ def getDeliveries():
     if not login:
         return jsonify({"error": "Login is required"}), 400
 
-    user = mongo.db.drivers.find_one(
-        {"login": login}, {"_id": 0, "delivery": 1})
+    user = mongo.db.drivers.find_one({"login": login}, {"_id": 0, "delivery": 1})
+    
+    def serialize_date(delivery):
+        return {
+            "from": delivery["from"],
+            "from_address": delivery["from_address"],
+            "to": delivery["to"],
+            "to_address": delivery["to_address"],
+            "product_id": delivery["product_id"],
+            "amount": delivery["amount"],
+            # "datetime": delivery["datetime"].isoformat()  
+        }
+
+    deliveries = [serialize_date(e) for e in user.get("delivery", [])]
 
     if user and "delivery" in user:
         return jsonify(user["delivery"])
@@ -300,6 +314,8 @@ def addDelivery():
         print(amount)
         print(date)
         print(id)
+        result = ''.join(random.choices(string.ascii_letters + string.digits, k=24))
+        print(result)
         
         if not id:
             return jsonify({"error": "id обязателен"}), 400
@@ -307,6 +323,7 @@ def addDelivery():
         result = mongo.db.drivers.update_one(
             {"_id": ObjectId(id)},
             {"$addToSet": {"delivery": {
+                "id": result,
                 "from": fromCity,
                 "from_address": fromAddress,
                 "to": toCity,
