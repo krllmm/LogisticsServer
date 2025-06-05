@@ -166,28 +166,61 @@ def seeddb():
 @app.route('/seeddb_products', methods=['GET'])
 def seeddb_products():
     try:
-        mongo.db.products.insert_one(
-            {
-                "custom_id": 1,
-                "name": "Машина для перемешивания фарша МПФ-30.В1",
-                "quantity": 100,
-                "description": "Промышленная машина для перемешивания фарша.",
-                "weight": 20,
-                "dimentions": "50, 50, 80",
-                "storage_id": 1,
-            }
-        )
-        mongo.db.products.insert_one(
-            {
-                "custom_id": 2,
-                "name": "Машина тестораскаточная ТРМ-500",
-                "quantity": 80,
-                "description": "Промышленная машина для раскатывания теста.",
-                "weight": 13,
-                "dimentions": "60, 40, 60",
-                "storage_id": 1,
-            }
-        )
+        # mongo.db.products.insert_one(
+        #     {
+        #         "custom_id": 3,
+        #         "name": "Машина тестомесильная МТ-25-01 двухскоростная",
+        #         "quantity": 200,
+        #         "description": "Машина, которая месит тесто. Имеет две настройки скорости.",
+        #         "weight": 33,
+        #         "dimentions": "70, 70, 80",
+        #         "storage_id": 1,
+        #     }
+        # )
+        # mongo.db.products.insert_one(
+        #     {
+        #         "custom_id": 4,
+        #         "name": "Слайсер ЛР-220",
+        #         "quantity": 150,
+        #         "description": "Промышленный слайсер.",
+        #         "weight": 24,
+        #         "dimentions": "50, 60, 40",
+        #         "storage_id": 1,
+        #     }
+        # )
+        # mongo.db.products.insert_one(
+        #     {
+        #         "custom_id": 5,
+        #         "name": "Машина для переработки овощей МПО-1",
+        #         "quantity": 50,
+        #         "description": "Перерабатывет многие виды овощей.",
+        #         "weight": 20,
+        #         "dimentions": "30, 70, 70",
+        #         "storage_id": 1,
+        #     }
+        # )
+        # mongo.db.products.insert_one(
+        #     {
+        #         "custom_id": 1,
+        #         "name": "Машина для перемешивания фарша МПФ-30.В1",
+        #         "quantity": 100,
+        #         "description": "Промышленная машина для перемешивания фарша.",
+        #         "weight": 20,
+        #         "dimentions": "50, 50, 80",
+        #         "storage_id": 1,
+        #     }
+        # )
+        # mongo.db.products.insert_one(
+        #     {
+        #         "custom_id": 2,
+        #         "name": "Машина тестораскаточная ТРМ-500",
+        #         "quantity": 80,
+        #         "description": "Промышленная машина для раскатывания теста.",
+        #         "weight": 13,
+        #         "dimentions": "60, 40, 60",
+        #         "storage_id": 1,
+        #     }
+        # )
         return jsonify({"message": "Products created"}), 201
     except Exception as e:
         return {"error": str(e)}, 500
@@ -247,9 +280,11 @@ def loginLogist():
 @app.route('/getAllDrivers', methods=["GET"])
 def getAllDrivers():
     drivers = mongo.db.drivers.find()
+    
+    result = [serialize_doc(item) for item in drivers]
 
-    if drivers:
-        return jsonify(drivers)
+    if result:
+        return jsonify(result)
     else:
         return jsonify({"error": "Error happend on server"}), 404
 
@@ -376,6 +411,9 @@ def closeDelivery():
 
         if not item_to_move:
             return 'Item not found in user'
+        
+        item_to_move["driver_name"] = user["first_name"]
+        item_to_move["driver_second_name"] = user["second_name"]
 
         # Добавить в другую коллекцию
         mongo.db.delivery_history.insert_one(item_to_move)
